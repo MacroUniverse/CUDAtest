@@ -1,39 +1,35 @@
 # Makefile
 
-exe = cn2D.x
+exe = single_thread.x
 
 
 # this project requires "MatFile_linux" github repository
-sourcepath = ../MatFile_linux/
-libpath = ../MatFile_linux/bin/
+#sourcepath = ../MatFile_linux/
+#libpath = ../MatFile_linux/bin/
 
 
 source = \
-cn2D.cpp \
-cn2Dfun.cpp \
-tridag.cpp \
-interp_1d.cpp \
-interp_2d.cpp
+single_thread.cu
 
-objects = $(source:.cpp=.o)
+objects = $(source:.cu=.o)
 
-xsource = matsave.cpp
+#xsource = matsave.cpp
 
-xobjects = $(xsource:.cpp=.o)
+#xobjects = $(xsource:.cpp=.o)
 
-compiler = g++
+compiler = nvcc
 
 flags =  \
 -O3 \
--std=c++11 \
--I $(sourcepath)
+-std=c++11
+#-I $(sourcepath)
 # -g
 # -O3
 
 # what does this do? 
 #-Wl,-rpath-link,$(libpath)
 
-libs = \
+#libs = \
 -Wl,-rpath,$(libpath) \
 -L$(libpath) \
 -l mat \
@@ -49,11 +45,9 @@ $(objects):$(source)
 #run:
 #	LD_LIBRARY_PATH=$(libpath) ./$(exe)
 
-# clean data files
-clear:
-	rm -f Data/*.mat
-
+prof:
+	nvprof ./$(exe)
 # clean all except source
 clean:
-	rm -f *.o *.x *.gch Data/*.mat
+	rm -f *.o *.x *.gch
 
