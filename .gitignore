@@ -1,11 +1,4 @@
-﻿.vs/cn2D/v15/ipch/
-.vs/cn2D/v15/Browse.VC.db
-Debug/
-Release/
-x64/
-cn2D/Debug/
-cn2D/Release/
-cn2D/x64/
+﻿*.out
 *.o
 *.x
 *.gch
