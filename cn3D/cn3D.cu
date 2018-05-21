@@ -1,9 +1,6 @@
 #include "nr3.h"
 #include "nr3plus.h"
 using namespace std;
-typedef int Int;
-typedef double Doub;
-typedef complex<double> Complex;
 
 // set pointers in v[i][j] for 3D matrix
 __global__
@@ -38,14 +35,19 @@ void cudaDeleteMat3DComplex(Complex ***&v, Complex **&v_0, Complex *&v_00)
 
 // propagate the wave function in z direction
 __global__
-void cn1Dz(Complex ***psi)
+void cn1Dz(Complex ***psi, const Int Nx, const Int Ny, const Int Nz)
 {
-	psi[0][0][0] = 3.1415926;
+	Int i,j,k;
+	for(i=0; i<Nx; ++i)
+	for(j=0; j<Ny; ++j)
+	for(k=0; k<Nz; ++k)
+		psi[i][j][k] += Complex(1.1, 1.1);
 }
 
 int main()
 {
-	Int i, j, k, size, Nx = 3, Ny = 3, Nz = 3;
+	Int i, j, k, size, Nx = 100, Ny = 100, Nz = 100;
+	Doub err{0.};
 	Mat3DComplex psi(Nx,Ny,Nz);
 	Complex ***psi_d, **psi_d_0, *psi_d_00; 
 	cudaNewMat3DComplex(psi_d, psi_d_0, psi_d_00, Nx, Ny, Nz);
@@ -55,20 +57,20 @@ int main()
 	for(i=0;i<Nx;++i)
 	for(j=0;j<Ny;++j)
 	for(k=0;k<Nz;++k)
-		psi[i][j][k] = Complex(0.,0.);
-
-	
-	cout << "checking initialization of psi" << endl;
-	cout << psi[0][0][0] << psi[0][0][1] << psi[0][1][0] << endl;
+		psi[i][j][k] = Complex(0., 0.);
 
 	cudaMemcpy(psi_d_00, psi[0][0], size, cudaMemcpyHostToDevice);
 	
-	cn1Dz<<<1,1>>>(psi_d);
+	cn1Dz<<<1,1>>>(psi_d, Nx, Ny, Nz);
 
 	cudaMemcpy(psi[0][0], psi_d_00, size, cudaMemcpyDeviceToHost);
 
-	cout << "after function call, psi = " << endl;
-	cout << psi[0][0][0] << psi[0][0][1] << endl;
+	for(i=0;i<Nx;++i)
+	for(j=0;j<Ny;++j)
+	for(k=0;k<Nz;++k)
+		err += abs(psi[i][j][k] - Complex(1.1,1.1));
+
+	cout << "err =  " << err << endl;
 
 	cudaDeleteMat3DComplex(psi_d, psi_d_0, psi_d_00);
 }

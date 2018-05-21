@@ -1,5 +1,6 @@
 // nr3.h from Numerical Recipes
 // modified by Hongyu Shi
+// using "cuda_complex.h" instead of <complex>, removed std:: from std::complex
 
 #ifndef _NR3_H_
 #define _NR3_H_
@@ -13,7 +14,7 @@
 // all the system #include's we'll ever need
 #include <fstream>
 #include <cmath>
-#include "cuda_complex.hpp"
+#include "cuda_complex.h"
 #include <iostream>
 #include <iomanip>
 #include <vector>
