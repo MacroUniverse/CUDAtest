@@ -2,20 +2,46 @@
 #include "nr3plus.h"
 using namespace std;
 
+__device__ Int Nx, Nxprint, Ny, Nyprint, Nz, Nzprint, Nt, Ntprint,
+	NFadeX1, NFadeX2, NFadeY1, NFadeY2, NFadeZ1, NFadeZ2, NDetecX1,
+	NDetecX2, NDetecY1, NDetecY2, NDetecZ1, NDetecZ2, Npx, Npy, Npz,
+	NE;
+__device__ Doub xmin, xmax, ymin, ymax, zmin, zmax, tmin, tmax, dx,
+	dy, dz, dt, fadeX1, fadeX2, fadeY1, fadeY2, fadeZ1, fadeZ2, xc,
+	yc, zc, Asoft, asoft, E0x, sigmatx, omegax, lambdax, tcx, E0y,
+	sigmaty, omegay, lambday, tcy, pxmin, pxmax, pymin, pymax, Emin,
+	Emax;
+__device__ Doub *x, *y, *z, *t;
+
+struct Cn3Dparam
+{
+	Int Nx, Nxprint, Ny, Nyprint, Nz, Nzprint, Nt, Ntprint,
+		NFadeX1, NFadeX2, NFadeY1, NFadeY2, NFadeZ1, NFadeZ2, NDetecX1,
+		NDetecX2, NDetecY1, NDetecY2, NDetecZ1, NDetecZ2, Npx, Npy, Npz,
+		NE;
+	Doub xmin, xmax, ymin, ymax, zmin, zmax, tmin, tmax, dx,
+		dy, dz, dt, fadeX1, fadeX2, fadeY1, fadeY2, fadeZ1, fadeZ2, xc,
+		yc, zc, Asoft, asoft, E0x, sigmatx, omegax, lambdax, tcx, E0y,
+		sigmaty, omegay, lambday, tcy, pxmin, pxmax, pymin, pymax, Emin,
+		Emax;
+	VecDoub x, y, z, t;
+};
+
+Cn3Dparam h;
+
+
 // set pointers in v[i][j] for 3D matrix
 __global__
 void setMat3DComplex(Complex ***v, Complex **v_0, Complex *v_00, const Int Ni, const Int Nj, const Int Nk)
 {
-	Int i,j;
-	v[0] = v_0; v[0][0] = v_00;
-	for(j=1; j<Nj; ++j) v[0][j] = v[0][j-1] + Nk;
-	for(i=1; i<Ni; ++i) {
-		v[i] = v[i-1] + Nj;
-		v[i][0] = v[i-1][0] + Nj*Nk;
-		for(j=1; j<Nj; ++j) v[i][j] = v[i][j-1] + Nk;
+	Int ind = blockIdx.x*blockDim.x + threadIdx.x;
+	if (ind < Ni)
+		v[ind] = v_0 + Nj*ind;
+	else if (ind < Ni*(Nj+1)) {
+		Int j = ind - Ni;
+		v_0[j] = v_00 + Nk*j;
 	}
 }
-
 
 // allocate a 3D matrix in GPU
 // every 3D matrix need to have 3 pointers in the host
@@ -24,7 +50,7 @@ void cudaNewMat3DComplex(Complex ***&v, Complex **&v_0, Complex *&v_00, const In
 	cudaMalloc((void****)&v, Ni*sizeof(Complex**));
 	cudaMalloc((void***)&v_0, Ni*Nj*sizeof(Complex*));
 	cudaMalloc((void**)&v_00, Ni*Nj*Nk*sizeof(Complex));
-	setMat3DComplex<<<1,1>>>(v, v_0, v_00, Ni, Nj, Nk);
+	setMat3DComplex<<<(Ni*(Nj+1)+255)/256,256>>>(v, v_0, v_00, Ni, Nj, Nk);
 }
 
 // deallocate a 3D matrix
@@ -33,42 +59,78 @@ void cudaDeleteMat3DComplex(Complex ***&v, Complex **&v_0, Complex *&v_00)
 	cudaFree(v); cudaFree(v_0); cudaFree(v_00);
 }
 
+__global__
+void devInitialize(Cn3Dparam h)
+{
+	xmin = h.xmin; xmax = h.xmax; Nx = h.Nx;
+	ymin = h.ymin; ymax = h.ymax; Ny = h.Ny;
+	zmin = h.zmin; zmax = h.zmax; Nz = h.Nz;
+	tmin = h.tmin; tmax = h.tmax; Nt = h.Nt;
+}
+
+void Initialize(Mat3DComplex_O &psi, Complex ***&psi_d, Complex **&psi_d_0, Complex *&psi_d_00)
+{
+	Int i, j, k;
+
+	h.xmin = -5.; h.xmax = 5.; h.Nx = 11;
+	h.ymin = -5.; h.ymax = 5.; h.Ny = 11;
+	h.zmin = -5.; h.zmax = 5.; h.Nz = 11;
+	h.tmin =  0.; h.tmax = 1.; h.Nt = 11;
+
+	cudaNewMat3DComplex(psi_d, psi_d_0, psi_d_00, h.Nx, h.Ny, h.Nz);
+
+	psi.resize(h.Nx, h.Ny, h.Nz);
+
+	for(i=0;i<h.Nx;++i)
+	for(j=0;j<h.Ny;++j)
+	for(k=0;k<h.Nz;++k)
+		psi[i][j][k] = Complex(0., 0.);
+
+	devInitialize<<<1,1>>>(h);
+
+	
+	cudaMemcpy(psi_d_00, psi[0][0], h.Nx*h.Ny*h.Nz*sizeof(Complex), cudaMemcpyHostToDevice);
+}
+
 // propagate the wave function in z direction
 __global__
-void cn1Dz(Complex ***psi, const Int Nx, const Int Ny, const Int Nz)
+void cn1Dz(Complex ***psi)
 {
 	Int i,j,k;
+	Doub temp;
 	for(i=0; i<Nx; ++i)
 	for(j=0; j<Ny; ++j)
-	for(k=0; k<Nz; ++k)
-		psi[i][j][k] += Complex(1.1, 1.1);
+	for(k=0; k<Nz; ++k) {
+		temp = Ny*Nz*i + Nz*j + k;
+		psi[i][j][k] += Complex(temp, temp);
+	}
 }
 
 int main()
 {
-	Int i, j, k, size, Nx = 100, Ny = 100, Nz = 100;
-	Doub err{0.};
-	Mat3DComplex psi(Nx,Ny,Nz);
-	Complex ***psi_d, **psi_d_0, *psi_d_00; 
-	cudaNewMat3DComplex(psi_d, psi_d_0, psi_d_00, Nx, Ny, Nz);
+	Int i, j, k, size;
+	Doub err{0.}, temp;
+	Mat3DComplex psi;
+	Complex ***psi_d, **psi_d_0, *psi_d_00;
+	cout << "in main()" << endl;
 
-	size = Nx*Ny*Nz*sizeof(Complex);
+	Initialize(psi, psi_d, psi_d_0, psi_d_00);
 
-	for(i=0;i<Nx;++i)
-	for(j=0;j<Ny;++j)
-	for(k=0;k<Nz;++k)
-		psi[i][j][k] = Complex(0., 0.);
+	size = h.Nx*h.Ny*h.Nz*sizeof(Complex);
 
-	cudaMemcpy(psi_d_00, psi[0][0], size, cudaMemcpyHostToDevice);
 	
-	cn1Dz<<<1,1>>>(psi_d, Nx, Ny, Nz);
+	//cudaDeviceSynchronize();
+
+	cn1Dz<<<1,1>>>(psi_d);
 
 	cudaMemcpy(psi[0][0], psi_d_00, size, cudaMemcpyDeviceToHost);
 
-	for(i=0;i<Nx;++i)
-	for(j=0;j<Ny;++j)
-	for(k=0;k<Nz;++k)
-		err += abs(psi[i][j][k] - Complex(1.1,1.1));
+	for(i=0;i<h.Nx;++i)
+	for(j=0;j<h.Ny;++j)
+	for(k=0;k<h.Nz;++k) {
+		temp = h.Ny*h.Nz*i + h.Nz*j + k;
+		err += abs(psi[i][j][k] - Complex(temp,temp));
+	}
 
 	cout << "err =  " << err << endl;
 
