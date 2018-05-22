@@ -1,4 +1,4 @@
-// Modified by Hongyu Shi 2018/5/20: fixed some warnings by adding "CUDA_CALLABLE_MEMBER" before some functions
+// Modified by Hongyu Shi 2018/5/20: fixed some warnings by adding "CUDA_CALLABLE_MEMBER" before some functions. Also added inline for one function to prevent multidefinition, search "Hongyu inlined" to see where
 
 // An implementation of C++ std::complex for use on CUDA devices.
 // Written by John C. Travers <jtravs@gmail.com> (2012)
@@ -596,7 +596,7 @@ operator/(const complex<_Tp>& __z, const complex<_Tp>& __w)
 
 template<>
 CUDA_CALLABLE_MEMBER
-complex<float>
+inline complex<float> // Hongyu inlined
 operator/(const complex<float>& __z, const complex<float>& __w)
 {
     int __ilogbw = 0;

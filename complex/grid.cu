@@ -1,6 +1,6 @@
 #include <iostream>
 #include <cmath>
-#include "cuda_complex.hpp"
+#include "cuda_complex.h"
 
 using namespace std;
 typedef complex<double> Complex;

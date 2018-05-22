@@ -1,4 +1,3 @@
-#include "nr3.h"
 #include "nr3plus.h"
 using namespace std;
 
@@ -60,15 +59,18 @@ void cudaDeleteMat3DComplex(Complex ***&v, Complex **&v_0, Complex *&v_00)
 }
 
 __global__
-void devInitialize(Cn3Dparam h)
+void devInitialize(Cn3Dparam h, Doub *x_d, Doub *y_d, Doub *z_d)
 {
 	xmin = h.xmin; xmax = h.xmax; Nx = h.Nx;
 	ymin = h.ymin; ymax = h.ymax; Ny = h.Ny;
 	zmin = h.zmin; zmax = h.zmax; Nz = h.Nz;
 	tmin = h.tmin; tmax = h.tmax; Nt = h.Nt;
+
+	x = x_d; y = y_d; z = z_d;
 }
 
-void Initialize(Mat3DComplex_O &psi, Complex ***&psi_d, Complex **&psi_d_0, Complex *&psi_d_00)
+void Initialize(Mat3DComplex_O &psi, Complex ***&psi_d, Complex **&psi_d_0,
+	Complex *&psi_d_00, Doub *&x_d, Doub *&y_d, Doub *&z_d)
 {
 	Int i, j, k;
 
@@ -76,6 +78,18 @@ void Initialize(Mat3DComplex_O &psi, Complex ***&psi_d, Complex **&psi_d_0, Comp
 	h.ymin = -5.; h.ymax = 5.; h.Ny = 11;
 	h.zmin = -5.; h.zmax = 5.; h.Nz = 11;
 	h.tmin =  0.; h.tmax = 1.; h.Nt = 11;
+
+	linspace(h.x,h.xmin,h.xmax,h.Nx);
+	linspace(h.y,h.ymin,h.ymax,h.Ny);
+	linspace(h.z,h.zmin,h.zmax,h.Nz);
+	linspace(h.t,h.tmin,h.tmax,h.Nt);
+
+	cudaMalloc((void**)&x_d, h.Nx*sizeof(Doub));
+	cudaMalloc((void**)&y_d, h.Ny*sizeof(Doub));
+	cudaMalloc((void**)&z_d, h.Nz*sizeof(Doub));
+	cudaMemcpy(x_d, &h.x[0], h.Nx*sizeof(Doub), cudaMemcpyHostToDevice);
+	cudaMemcpy(y_d, &h.y[0], h.Ny*sizeof(Doub), cudaMemcpyHostToDevice);
+	cudaMemcpy(z_d, &h.z[0], h.Nz*sizeof(Doub), cudaMemcpyHostToDevice);
 
 	cudaNewMat3DComplex(psi_d, psi_d_0, psi_d_00, h.Nx, h.Ny, h.Nz);
 
@@ -86,7 +100,7 @@ void Initialize(Mat3DComplex_O &psi, Complex ***&psi_d, Complex **&psi_d_0, Comp
 	for(k=0;k<h.Nz;++k)
 		psi[i][j][k] = Complex(0., 0.);
 
-	devInitialize<<<1,1>>>(h);
+	devInitialize<<<1,1>>>(h, x_d, y_d, z_d);
 
 	
 	cudaMemcpy(psi_d_00, psi[0][0], h.Nx*h.Ny*h.Nz*sizeof(Complex), cudaMemcpyHostToDevice);
@@ -110,11 +124,12 @@ int main()
 {
 	Int i, j, k, size;
 	Doub err{0.}, temp;
+	Doub *x_d, *y_d, *z_d; // corresponds to h.x, h.y, h.z
 	Mat3DComplex psi;
 	Complex ***psi_d, **psi_d_0, *psi_d_00;
 	cout << "in main()" << endl;
 
-	Initialize(psi, psi_d, psi_d_0, psi_d_00);
+	Initialize(psi, psi_d, psi_d_0, psi_d_00, x_d, y_d, z_d);
 
 	size = h.Nx*h.Ny*h.Nz*sizeof(Complex);
 
