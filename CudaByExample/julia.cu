@@ -29,18 +29,17 @@ int julia( int x, int y ) {
 }
 
 __global__
-void kernel( int *ptr ) {
-    int x = blockIdx.x;
-    int y = blockIdx.y;
-    int juliaValue = julia( x, y );
-    ptr[x + y * gridDim.x] = 255*juliaValue;
+void kernel( Uchar *ptr ) {
+    Int x = blockIdx.x;
+    Int y = blockIdx.y;
+    Int juliaValue = julia( x, y );
+    ptr[x + y * gridDim.x] = (Uchar)(255*juliaValue);
 }
 
 int main( void ) {
-    int i, j, img_size = DIM*DIM*sizeof(int);
-    MatInt bitmap(DIM, DIM);
-    MatDoub x(DIM, DIM);
-    int *dev_bitmap;
+    int img_size = DIM*DIM*sizeof(Uchar);
+    MatUchar bitmap(DIM, DIM);
+    Uchar *dev_bitmap;
 
     cudaMalloc( (void**)&dev_bitmap, img_size );
 
@@ -50,12 +49,8 @@ int main( void ) {
     cudaMemcpy( bitmap[0], dev_bitmap, img_size,
                         cudaMemcpyDeviceToHost );
     
-    for (i = 0; i < DIM; ++i)
-    for (j = 0; j < DIM; ++j) {
-        x[i][j] = (Doub)bitmap[i][j];
-    }
     MATFile *pfile = matOpen("julia.mat", "w");
-    matsave(x, "julia", pfile);
+    matsave(bitmap, "julia", pfile);
     matClose(pfile);
     cudaFree( dev_bitmap );
 }
