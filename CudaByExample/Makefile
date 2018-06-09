@@ -38,4 +38,4 @@ $(objects):$(source)
 
 # clean all except source
 clean:
-	rm -f *.o *.x *.gch Data/*.mat
+	rm -f *.o *.x *.gch *.mat

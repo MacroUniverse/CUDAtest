@@ -10,7 +10,7 @@ Int julia(Int x, Int y, float scale) {
     Int i;
     float jx = scale * (float)(DIM/2 - x)/(DIM/2);
     float jy = scale * (float)(DIM/2 - y)/(DIM/2);
-    Complex c(-0.8, 0.156);
+    Complex c(-0.8, 0.15745);
     Complex a(jx, jy);
 
     for (i=0; i<200; i++) {
