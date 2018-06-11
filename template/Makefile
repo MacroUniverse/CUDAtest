@@ -4,13 +4,13 @@ exe = template.x
 
 #========  settings for MatFile =================
 ifeq (1,2)
-	# binary mode
+    # binary mode
     MatPath = ../../MatFile_linux/
-    MatCompile = -I $(MatPath) matsave.cu -D MATFILE_BINARY 
-    MatLink = -I $(MatPath) -Xcompiler \"-Wl,-rpath,$(MatPath)bin/\" -L$(MatPath)bin/ -l mat -l mx
+    MatCompile = -I $(MatPath) -D MATFILE_BINARY 
+    MatLink = -Xcompiler \"-Wl,-rpath,$(MatPath)bin/\" -L$(MatPath)bin/ -l mat -l mx
 else
-	# text mode
-    MatCompile = -DMATFILE_PRECISION=8
+    # text mode
+    MatCompile = -D MATFILE_PRECISION=8
 endif
 #================================================
 
