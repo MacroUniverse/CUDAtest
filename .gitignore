@@ -2,10 +2,7 @@
 *.o
 *.x
 *.gch
-*.opendb
-*.wf
-*.vector
 *.gif
-Data/*.mat
-*.png
+*.mat
+*.matt
 *.asv

@@ -2,40 +2,33 @@
 
 exe = template.x
 
-# this project requires "MatFile_linux" github repository
-sourcepath = ../../MatFile_linux/
-libpath = ../../MatFile_linux/bin/
+#========  settings for MatFile =================
+ifeq (1,2)
+	# binary mode
+    MatPath = ../../MatFile_linux/
+    MatCompile = -I $(MatPath) matsave.cu -D MATFILE_BINARY 
+    MatLink = -I $(MatPath) -Xcompiler \"-Wl,-rpath,$(MatPath)bin/\" -L$(MatPath)bin/ -l mat -l mx
+else
+	# text mode
+    MatCompile = -DMATFILE_PRECISION=8
+endif
+#================================================
 
-source = \
-template.cu \
-nr3plus.cu \
-matsave.cu
+source = template.cu nr3plus.cu matsave.cu
 
 objects = $(source:.cu=.o)
 
 compiler = nvcc
 
-flags =  \
--arch=sm_60 \
--O3 \
--std=c++11 \
- -I $(sourcepath)
-# -g
-# -O3
-
-libs = \
--Xcompiler \"-Wl,-rpath,$(libpath)\" \
--L$(libpath) \
--l mat \
--l mx
-# -Wl,-rpath,$(libpath) \
+flags =  -arch=sm_60 -O3 -std=c++11 
+# -g -O3
 
 $(exe):$(objects)
-	$(compiler) -o $(exe) $(flags) $(objects) $(libs)
+	$(compiler) -o $(exe) $(flags) $(objects) $(MatLink)
 
 $(objects):$(source)
-	$(compiler) -c $(flags) $(source)
+	$(compiler) -c $(flags) $(source) $(MatCompile) 
 
 # clean all except source
 clean:
-	rm -f *.o *.x *.gch Data/*.mat
+	rm -f *.o *.x *.gch *.mat *.matt

@@ -1,9 +1,8 @@
-// save vectors and matrices defined in "nr3.h" (see Numerical Recipes) into .mat file for Matlab
-// can't figure out how to directly save to complex matrix yet
-
 #include "matsave.h"
 
 using namespace std;
+
+#ifdef MATFILE_BINARY
 
 // matsave()
 
@@ -574,3 +573,478 @@ void matload(Mat3DComplex_O &a, const std::string &varname, MATFile *pfile)
 			a[i][j][k] = ppar[i + m*j + mn*k];
 	mxDestroyArray(pa);
 }
+
+#else /*#ifdef MATFILE_BINARY*/
+// text mode
+
+// change extension from ".mat" to
+MATFile *matOpen(std::string fname, std::string rw)
+{
+	Int N = fname.size();
+	fname += "t";
+	MATFile* pfile = new ofstream;
+	*pfile = ofstream(fname);
+#ifdef MATFILE_PRECISION
+	pfile->precision(MATFILE_PRECISION);
+#endif
+	return pfile;
+}
+
+void matClose(MATFile* pfile)
+{
+	pfile->close();
+	delete pfile;
+}
+
+void matsave(const Uchar s, const std::string &varname, MATFile *pfile)
+{
+	Int i, n;
+	// write variable name info
+	n = varname.size();
+	*pfile << n << '\n';
+	for (i = 0; i < n; ++i) {
+		*pfile << (Int)varname.at(i) << '\n';
+	}
+	// write data type info
+	*pfile << 3 << '\n';
+	// write dimension info
+	*pfile << 0 << '\n';
+	// write matrix data
+	*pfile << (Int)s << '\n';
+}
+
+void matsave(const Int s, const std::string &varname, MATFile *pfile)
+{
+	Int i, n;
+	// write variable name info
+	n = varname.size();
+	*pfile << n << '\n';
+	for (i = 0; i < n; ++i) {
+		*pfile << (Int)varname.at(i) << '\n';
+	}
+	// write data type info
+	*pfile << 2 << '\n';
+	// write dimension info
+	*pfile << 0 << '\n';
+	// write matrix data
+	*pfile << s << '\n';
+}
+
+void matsave(const Doub s, const std::string &varname, MATFile *pfile)
+{
+	Int i, n;
+	// write variable name info
+	n = varname.size();
+	*pfile << n << '\n';
+	for (i = 0; i < n; ++i) {
+		*pfile << (Int)varname.at(i) << '\n';
+	}
+	// write data type info
+	*pfile << 0 << '\n';
+	// write dimension info
+	*pfile << 0 << '\n';
+	// write matrix data
+	*pfile << s << '\n';
+}
+
+void matsave(const Complex s, const std::string &varname, MATFile *pfile)
+{
+	Int i, n;
+	// write variable name info
+	n = varname.size();
+	*pfile << n << '\n';
+	for (i = 0; i < n; ++i) {
+		*pfile << (Int)varname.at(i) << '\n';
+	}
+	// write data type info
+	*pfile << 1 << '\n';
+	// write dimension info
+	*pfile << 0 << '\n';
+	// write matrix data
+	if (imag(s) == 0)
+		*pfile << real(s) << '\n';
+	else
+		*pfile << real(s) << '+' << imag(s) << "i\n";
+}
+
+void matsave(VecUchar_I &v, const std::string &varname, MATFile *pfile)
+{
+	Int i, n;
+	// write variable name info
+	n = varname.size();
+	*pfile << n << '\n';
+	for (i = 0; i < n; ++i) {
+		*pfile << (Int)varname.at(i) << '\n';
+	}
+	// write data type info
+	*pfile << 3 << '\n';
+	// write dimension info
+	n = v.size();
+	*pfile << 1 << '\n' << n << '\n';
+	// write matrix data
+	for (i = 0; i < n; ++i) {
+		*pfile << (Int)v[i] << '\n';
+	}
+}
+
+void matsave(VecInt_I &v, const std::string &varname, MATFile *pfile)
+{
+	Int i, n;
+	// write variable name info
+	n = varname.size();
+	*pfile << n << '\n';
+	for (i = 0; i < n; ++i) {
+		*pfile << (Int)varname.at(i) << '\n';
+	}
+	// write data type info
+	*pfile << 2 << '\n';
+	// write dimension info
+	n = v.size();
+	*pfile << 1 << '\n' << n << '\n';
+	// write matrix data
+	for (i = 0; i < n; ++i) {
+		*pfile << v[i] << '\n';
+	}
+}
+
+void matsave(VecDoub_I &v, const std::string &varname, MATFile *pfile)
+{
+	Int i, n;
+	// write variable name info
+	n = varname.size();
+	*pfile << n << '\n';
+	for (i = 0; i < n; ++i) {
+		*pfile << (Int)varname.at(i) << '\n';
+	}
+	// write data type info
+	*pfile << 0 << '\n';
+	// write dimension info
+	n = v.size();
+	*pfile << 1 << '\n' << n << '\n';
+	// write matrix data
+	for (i = 0; i < n; ++i) {
+		*pfile << v[i] << '\n';
+	}
+}
+
+void matsave(VecComplex_I &v, const std::string &varname, MATFile *pfile)
+{
+	Int i, n;
+	Doub cr, ci;
+	// write variable name info
+	n = varname.size();
+	*pfile << n << '\n';
+	for (i = 0; i < n; ++i) {
+		*pfile << (Int)varname.at(i) << '\n';
+	}
+	// write data type info
+	*pfile << 1 << '\n';
+	// write dimension info
+	n = v.size();
+	*pfile << 1 << '\n' << n << '\n';
+	// write matrix data
+	for (i = 0; i < n; ++i) {
+		cr = real(v[i]); ci = imag(v[i]);
+		if (ci == 0)
+			*pfile << cr << '\n';
+		else
+			*pfile << cr << '+' << ci << "i\n";
+	}
+}
+
+void matsave(MatUchar_I &a, const string &varname, MATFile *pfile,
+	const Int step1, const Int step2)
+{
+	Int i, j, m, n;
+	// write variable name info
+	n = varname.size();
+	*pfile << n << '\n';
+	for (i = 0; i < n; ++i) {
+		*pfile << (Int)varname.at(i) << '\n';
+	}
+	// write data type info
+	*pfile << 3 << '\n';
+	// write dimension info
+	m = (a.nrows() + step1 - 1) / step1; n = (a.ncols() + step2 - 1) / step2;
+	*pfile << 2 << '\n' << m << '\n' << n << '\n';
+	// write matrix data
+	for (j = 0; j < n; ++j)
+		for (i = 0; i < m; ++i) {
+			*pfile << (Int)a[step1*i][step2*j] << '\n';
+		}
+}
+
+void matsave(MatInt_I &a, const string &varname, MATFile *pfile,
+	const Int step1, const Int step2)
+{
+	Int i, j, m, n;
+	// write variable name info
+	n = varname.size();
+	*pfile << n << '\n';
+	for (i = 0; i < n; ++i) {
+		*pfile << (Int)varname.at(i) << '\n';
+	}
+	// write data type info
+	*pfile << 2 << '\n';
+	// write dimension info
+	m = (a.nrows() + step1 - 1) / step1; n = (a.ncols() + step2 - 1) / step2;
+	*pfile << 2 << '\n' << m << '\n' << n << '\n';
+	// write matrix data
+	for (j = 0; j < n; ++j)
+		for (i = 0; i < m; ++i) {
+			*pfile << a[step1*i][step2*j] << '\n';
+		}
+}
+
+void matsave(MatDoub_I &a, const string &varname, MATFile *pfile,
+	const Int step1, const Int step2)
+{
+	Int i, j, m, n;
+	// write variable name info
+	n = varname.size();
+	*pfile << n << '\n';
+	for (i = 0; i < n; ++i) {
+		*pfile << (Int)varname.at(i) << '\n';
+	}
+	// write data type info
+	*pfile << 0 << '\n';
+	// write dimension info
+	m = (a.nrows() + step1 - 1) / step1; n = (a.ncols() + step2 - 1) / step2;
+	*pfile << 2 << '\n' << m << '\n' << n << '\n';
+	// write matrix data
+	for (j = 0; j < n; ++j)
+		for (i = 0; i < m; ++i) {
+			*pfile << a[step1*i][step2*j] << '\n';
+		}
+}
+
+void matsave(MatComplex_I &a, const string &varname, MATFile *pfile,
+	const Int step1, const Int step2)
+{
+	Int i, j, m, n;
+	Complex c; Doub cr, ci;
+	// write variable name info
+	n = varname.size();
+	*pfile << n << '\n';
+	for (i = 0; i < n; ++i) {
+		*pfile << (Int)varname.at(i) << '\n';
+	}
+	// write data type info
+	*pfile << 1 << '\n';
+	// write dimension info
+	m = (a.nrows() + step1 - 1) / step1; n = (a.ncols() + step2 - 1) / step2;
+	*pfile << 2 << '\n' << m << '\n' << n << '\n';
+	// write matrix data
+	for (j = 0; j < n; ++j)
+		for (i = 0; i < m; ++i) {
+			c = a[step1*i][step2*j]; cr = real(c); ci = imag(c);
+			if (ci == 0)
+				*pfile << cr << '\n';
+			else
+				*pfile << cr << '+' << ci << "i\n";
+		}
+}
+
+void matsave(Mat3DDoub_I &a, const std::string &varname, MATFile *pfile,
+	const Int step1, const Int step2, const Int step3)
+{
+	Int i, j, k, m, n, q;
+	// write variable name info
+	n = varname.size();
+	*pfile << n << '\n';
+	for (i = 0; i < n; ++i) {
+		*pfile << (Int)varname.at(i) << '\n';
+	}
+	// write data type info
+	*pfile << 0 << '\n';
+	// write dimension info
+	m = (a.dim1() + step1 - 1) / step1; n = (a.dim2() + step2 - 1) / step2;
+	q = (a.dim3() + step3 - 1) / step3;
+	*pfile << 3 << '\n' << m << '\n' << n << '\n' << q << '\n';
+	// write matrix data
+	for (k = 0; k < q; ++k)
+	for (j = 0; j < n; ++j)
+	for (i = 0; i < m; ++i)
+		*pfile << a[step1*i][step2*j][step3*k] << '\n';
+}
+
+/* specify xyz = 'x','y' or 'z', and take Nslice at indslice[i]
+if xyz = 'x', step1 is in y direction, step2 is in z direction, save pa[iy][iz][ix].
+if xyz = 'y', step1 is in z direction, step2 is in x direction, save pa[iz][ix][iy].
+if xyz = 'z', step1 is in x direction, step2 is in y direction, save pa[ix][iy][iz]. */
+void matsave(Mat3DDoub_I &a, const std::string &varname, MATFile *pfile,
+	const Char xyz, VecInt_I &slice, const Int step1, const Int step2)
+{
+	Int i, j, k, m, n, ind, Nslice{ slice.size() };
+	// write variable name info
+	n = varname.size();
+	*pfile << n << '\n';
+	for (i = 0; i < n; ++i) {
+		*pfile << (Int)varname.at(i) << '\n';
+	}
+	// write data type info
+	*pfile << 0 << '\n';
+	if (xyz == 'x') {
+		// write dimension info
+		m = (a.dim2() + step1 - 1) / step1; n = (a.dim3() + step2 - 1) / step2;
+		*pfile << 3 << '\n' << m << '\n' << n << '\n' << Nslice << '\n';
+		// write matrix data
+		for (i = 0; i < Nslice; ++i) {
+			ind = slice[i];
+			for (k = 0; k < n; ++k)
+				for (j = 0; j < m; ++j)
+					*pfile << a[ind][step1*j][step2*k] << '\n';
+		}
+	}
+	else if (xyz == 'y') {
+		// write dimension info
+		m = (a.dim3() + step1 - 1) / step1; n = (a.dim1() + step2 - 1) / step2;
+		*pfile << 3 << '\n' << m << '\n' << n << '\n' << Nslice << '\n';
+		// write matrix data
+		for (j = 0; j < Nslice; ++j) {
+			ind = slice[j];
+			for (i = 0; i < n; ++i)
+				for (k = 0; k < m; ++k)
+					*pfile << a[step2*i][ind][step1*k] << '\n';
+		}
+	}
+	else if (xyz == 'z') {
+		// write dimension info
+		m = (a.dim1() + step1 - 1) / step1; n = (a.dim2() + step2 - 1) / step2;
+		*pfile << 3 << '\n' << m << '\n' << n << '\n' << Nslice << '\n';
+		// write matrix data
+		for (k = 0; k < Nslice; ++k) {
+			ind = slice[k];
+			for (j = 0; j < n; ++j)
+				for (i = 0; i < m; ++i)
+					*pfile << a[step1*i][step2*j][ind] << '\n';
+		}
+	}
+	else {
+		cout << "error! illegal value of xyz" << endl; return;
+	}
+}
+
+void matsave(Mat3DComplex_I &a, const std::string &varname, MATFile *pfile,
+	const Int step1, const Int step2, const Int step3)
+{
+	Int i, j, k, m, n, q;
+	Complex c; Doub cr, ci;
+	// write variable name info
+	n = varname.size();
+	*pfile << n << '\n';
+	for (i = 0; i < n; ++i) {
+		*pfile << (Int)varname.at(i) << '\n';
+	}
+	// write data type info
+	*pfile << 1 << '\n';
+	// write dimension info
+	m = (a.dim1() + step1 - 1) / step1; n = (a.dim2() + step2 - 1) / step2;
+	q = (a.dim3() + step3 - 1) / step3;
+	*pfile << 3 << '\n' << m << '\n' << n << '\n' << q << '\n';
+	// write matrix data
+	for (k = 0; k < q; ++k)
+		for (j = 0; j < n; ++j)
+			for (i = 0; i < m; ++i) {
+				c = a[step1*i][step2*j][step3*k]; cr = real(c); ci = imag(c);
+				if (ci == 0)
+					*pfile << cr << '\n';
+				else
+					*pfile << cr << '+' << ci << "i\n";
+			}
+}
+
+/* specify xyz = 'x','y' or 'z', and take Nslice at indslice[i]
+if xyz = 'x', step1 is in y direction, step2 is in z direction, save pa[iy][iz][ix].
+if xyz = 'y', step1 is in z direction, step2 is in x direction, save pa[iz][ix][iy].
+if xyz = 'z', step1 is in x direction, step2 is in y direction, save pa[ix][iy][iz]. */
+void matsave(Mat3DComplex_I &a, const std::string &varname, MATFile *pfile,
+	const Char xyz, VecInt_I &slice, const Int step1, const Int step2)
+{
+	Int i, j, k, m, n, ind, Nslice{ slice.size() };
+	Complex c; Doub cr, ci;
+	// write variable name info
+	n = varname.size();
+	*pfile << n << '\n';
+	for (i = 0; i < n; ++i) {
+		*pfile << (Int)varname.at(i) << '\n';
+	}
+	// write data type info
+	*pfile << 1 << '\n';
+	if (xyz == 'x') {
+		// write dimension info
+		m = (a.dim2() + step1 - 1) / step1; n = (a.dim3() + step2 - 1) / step2;
+		*pfile << 3 << '\n' << m << '\n' << n << '\n' << Nslice << '\n';
+		// write matrix data
+		for (i = 0; i < Nslice; ++i) {
+			ind = slice[i];
+			for (k = 0; k < n; ++k)
+				for (j = 0; j < m; ++j)
+				{
+					c = a[ind][step1*j][step2*k]; cr = real(c); ci = imag(c);
+					if (ci == 0)
+						*pfile << cr << '\n';
+					else
+						*pfile << cr << '+' << ci << "i\n";
+				}
+					
+		}
+	}
+	else if (xyz == 'y') {
+		// write dimension info
+		m = (a.dim3() + step1 - 1) / step1; n = (a.dim1() + step2 - 1) / step2;
+		*pfile << 3 << '\n' << m << '\n' << n << '\n' << Nslice << '\n';
+		// write matrix data
+		for (j = 0; j < Nslice; ++j) {
+			ind = slice[j];
+			for (i = 0; i < n; ++i)
+				for (k = 0; k < m; ++k) {
+					c = a[step2*i][ind][step1*k]; cr = real(c); ci = imag(c);
+					if (ci == 0)
+						*pfile << cr << '\n';
+					else
+						*pfile << cr << '+' << ci << "i\n";
+				}
+		}
+	}
+	else if (xyz == 'z') {
+		// write dimension info
+		m = (a.dim1() + step1 - 1) / step1; n = (a.dim2() + step2 - 1) / step2;
+		*pfile << 3 << '\n' << m << '\n' << n << '\n' << Nslice << '\n';
+		// write matrix data
+		for (k = 0; k < Nslice; ++k) {
+			ind = slice[k];
+			for (j = 0; j < n; ++j)
+				for (i = 0; i < m; ++i) {
+					c = a[step1*i][step2*j][ind]; cr = real(c); ci = imag(c);
+					if (ci == 0)
+						*pfile << cr << '\n';
+					else
+						*pfile << cr << '+' << ci << "i\n";
+				}
+		}
+	}
+	else {
+		cout << "error! illegal value of xyz" << endl; return;
+	}
+}
+
+// matread functions
+
+// how to write matread() functions in c++
+//ifstream fin("test.matt");
+//Doub cr = 0, ci = 0, d3 = 0, d4 = 0;
+//Uchar suchar;
+//fin >> cr;
+//suchar = fin.get();
+//fin >> ci;
+//suchar = fin.get();
+//suchar = fin.get();
+//fin >> d3;
+//fin >> suchar;
+//fin >> d4;
+//fin >> suchar;
+//fin.ignore(1000, '\n');
+//fin.close();
+
+#endif /*#ifdef MATFILE_BINARY*/

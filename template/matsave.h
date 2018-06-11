@@ -1,8 +1,34 @@
-// save vectors and matrices defined in "nr3.h" (see Numerical Recipes) into .mat file for Matlab
+// save vectors and matrices defined in "nr3.h"
+//
+// ==========   1. Binary Mode ==================
+// define MATFILE_BINARY in this file or the compiler to save to ".mat" file for Matlab
+// in this case, directories and library path must be set for the compiler.
+// use matsave(*, <varname>.mat, *) to save
+//
+// ==========   2. Text Mode ===================
+// save data to text file with extension ".matt", totally compatible with binary mode
+// use "matread(<filename>)" matlab function to read ".matt" file, just like load();
+// in this case, only need to include "matsave.h", "matsave.cpp" and "nr3.h".
+// use matsave(*, <varname>.mat, *) to save, don't use <varname>.matt
+// define macro MATFILE_PRECISION and set a value to change output precision
+// one number class code: Doub=0, Complex=1, Int=2, Uchar=3.
 
 #pragma once
+//#define MATFILE_BINARY
+#ifndef MATFILE_PRECISION
+#define MATFILE_PRECISION 16
+#endif
 #include "nr3.h"
+
+#ifdef MATFILE_BINARY
 #include "mat.h"
+#else
+typedef std::ofstream MATFile;
+
+MATFile *matOpen(std::string fname, std::string rw);
+
+void matClose(MATFile *pfile);
+#endif
 
 // matsave()
 
