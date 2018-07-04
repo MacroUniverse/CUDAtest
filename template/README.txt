@@ -14,3 +14,8 @@ Two utilities are used:
 
 	Update Note: matsave.cu has no change from matsave.cpp, just copy the latest matsave.cpp and matsave.h, and change .cpp to .cu.
 
+
+======== Visual Studio Instruction ==================
+1. Create CUDA project, delete "kernel.cu".
+2. Copy all files to the project folder, add all ".cu" and ".h" files in the Solution Explorer.
+3. Add "template.prop" in Property Manager, restart Visual Studio.
