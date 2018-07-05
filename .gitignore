@@ -6,3 +6,5 @@
 *.mat
 *.matt
 *.asv
+*.user
+*.pdb

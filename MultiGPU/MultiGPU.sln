@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27004.2010
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MultiGPU", "MultiGPU.vcxproj", "{5E502C5A-7555-4FC5-9EC6-38D30A22C135}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5E502C5A-7555-4FC5-9EC6-38D30A22C135}.Debug|x64.ActiveCfg = Debug|x64
+		{5E502C5A-7555-4FC5-9EC6-38D30A22C135}.Debug|x64.Build.0 = Debug|x64
+		{5E502C5A-7555-4FC5-9EC6-38D30A22C135}.Release|x64.ActiveCfg = Release|x64
+		{5E502C5A-7555-4FC5-9EC6-38D30A22C135}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2CDD3A66-FD1E-4487-AE92-EBAC5F3C7C4C}
+	EndGlobalSection
+EndGlobal
