@@ -3,7 +3,7 @@
 exe = template.x
 
 #========  settings for MatFile =================
-mode = 2
+mode = 1
 ifeq ($(mode),1)
     # binary mode
     MatPath = ../../MatFile_linux/

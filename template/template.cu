@@ -30,7 +30,7 @@ int main()
 	cout << "writting data file..." << endl;
 	MATFile *pfile = matOpen("nr.mat", "w");
 	MatDoub A;
-	A.assign(2, 3, 0.);
+	A.resize(2, 3); A = 0.;
 	A[0][0] = 1.; A[0][1] = 3.; A[0][2] = 5.; A[1][2] = 11;
 	matsave(A, "A", pfile);
 	matClose(pfile);

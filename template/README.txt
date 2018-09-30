@@ -6,7 +6,7 @@ Two utilities are used:
 
 	Any file using nr3plus.h or nr3.h must have ".cu" extension. This is because nr3.h includes cu_complex.h, which has notations such as __device__ __host__.
 
-	Update Note: nr3.h is modified to include cu_complex.h instead of <complex>, which has no std:: namespace, be very careful when updating. Not sure about nr3plus.h and nr3plus.cu, use github to compare before updating.
+	Update Note: nr3.h is modified to include "cuda_complex.h" instead of <complex>, which has no std:: namespace, be very careful when updating. Not sure about nr3plus.h and nr3plus.cu, use github to compare before updating.
 
 2. the Matfile project
 
