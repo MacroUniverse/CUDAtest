@@ -1,6 +1,6 @@
 # Makefile
 
-exe = single_thread.x
+exe = grid.x
 
 
 # this project requires "MatFile_linux" github repository
@@ -9,7 +9,7 @@ exe = single_thread.x
 
 
 source = \
-single_thread.cu
+grid.cu
 
 objects = $(source:.cu=.o)
 
